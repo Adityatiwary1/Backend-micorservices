@@ -1,0 +1,4 @@
+/api_gateway/node_modules
+/api_gateway/.env
+/user_service/node_modules
+/user_service/.env
