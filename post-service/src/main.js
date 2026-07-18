@@ -4,12 +4,11 @@ const logger=require('./Utilis/logger');
 const mongoose=require('mongoose');
 const helmet=require('helmet');
 const cors=require('cors');
-//const{RateLimiterRedis}=require('rate-limit-flexible');
-const Redis=require('ioredis');
-const app=express();
-const router=require('./routes/authroutes');
-const errorhandler=require('./Middleware/errorhandlerexp')
-const cookieparser=require('cookie-parser');
+
+const router=require('./routes/postroutes');
+const errorhandler=require('./Middleware/errohandlernext');
+const auth=require('./Middleware/authmiddleware');
+const app = express();
 const connectDB = async () => {
     try {
         const connection = await mongoose.connect(
@@ -51,29 +50,23 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use(cookieparser());
+//app.use(cookieparser());
 app.use((req,res,next)=>{
     logger.info(`Received ${req.method} / ${req.path}`);
     return next();
 });
-//const ratelimiter=new RateLimiterRedis({storeClient: redisclient,keyPrefix:'userservice',points:4,duration:1})
-/*app.use((req,res,next)=>{//why not await???, a promise is thrown and then method rusn and calls next so prev req continues
-    ratelimiter.consume(req.ip).then(()=>next()).catch(()=>{
-        logger.warn('ip rate limit exceeded');
-        res.status(429).json({success:true,message:'Rate limit exceeded'});
-    })
-});*/
-app.use('/auth',router);
+app.use('/post',router);
 app.use(errorhandler);
-
-
 startServer(app);
+
 process.on("unhandledRejection", (reason, promise) => {
   logger.error(reason);  
   logger.error(promise);  
 });
 process.on("uncaughtException", (err,origin) => {
   logger.error("Uncaught Exception:", err);
-  //emongoose.disconnect();
+
+  // mongoose.disconnect();
   process.exit(1);
 });
+

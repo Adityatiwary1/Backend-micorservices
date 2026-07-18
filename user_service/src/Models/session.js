@@ -24,7 +24,7 @@ const sessionschema=mongoose.Schema({
     }
     
 },{timestamps:true});
-const session= mongoose.Model('session',sessionschema);
+const session= mongoose.model('session',sessionschema);
 
 sessionschema.index({refresh_token:1});
 //sessionschema.index({expires_at:1},{expireafterseconds:0});//findbetteralter  ttl mechnanism

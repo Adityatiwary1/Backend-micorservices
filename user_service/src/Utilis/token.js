@@ -4,7 +4,7 @@ const sessions=require('../Models/session')
 const logger=require('../Utilis/logger')
 const generate_tokens=async(newuser)=>{//for promise rejected case and also for await to db caller of this n should wait for completion
     
-    const acecss_token=jwt.sign({username:newuser.username,userid:newuser.id,type:'access',role:'user'},Process.env.JWT_SECRET,{expiresin:15*60});
+    const access_token=jwt.sign({username:newuser.username,userid:newuser.id,type:'access',role:'user'},process.env.JWT_SECRET,{expiresIn:15*60});
 
 
 /*

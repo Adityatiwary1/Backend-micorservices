@@ -1,5 +1,5 @@
 const winston=require('winston');
-const logger=winston.createLogger({level: process.env.ENV==='production'? 'info':'debug',//process.env.ENV||'debug'if not given ie undefiend it will be debug
+const logger=winston.createLogger({level: Process.env.ENV==='production'? 'info':'debug',//process.env.ENV||'debug'if not given ie undefiend it will be debug
     format:winston.format.combine(winston.format.timestamp(),winston.format.errors({stack:true}),
 winston.format.splat(),winston.format.json()),
 defaultMeta:{service:'user-service'},

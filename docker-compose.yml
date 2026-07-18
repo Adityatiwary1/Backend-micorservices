@@ -1,0 +1,44 @@
+services:
+    userservice:
+          image: userservice:v1
+          container_name: user-service
+          restart: unless-stopped
+          networks:
+                 - proj-network
+          ports:
+                 - "5000:5000"
+          env_file:
+                 - ./user_service/.env
+    
+    nginxservice:
+          image: openresty:v1
+          container_name: nginx_service
+          restart: unless-stopped
+          depends_on: 
+                - postservice
+                - userservice
+          networks:
+                 - proj-network
+          environment:
+                JWT_SECRET: JWT_SECRET
+          ports:
+                 - "3000:80"
+          volumes :
+                 - ./api_gateway/Nginx/new.nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf 
+    postservice:
+          image: temp:v1
+          container_name: post-service
+          restart: unless-stopped
+          depends_on:
+                 - userservice
+          env_file:
+                 - ./post-service/.env
+          networks:
+                 - proj-network
+          ports:
+                 - "3002:3002"
+networks:   
+  proj-network:
+          driver: bridge
+
+

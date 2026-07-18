@@ -14,13 +14,20 @@ const refresh_attributes={
 };
 const Authcookies=async(res,newuser)=>{
     const {access_token,refresh_token}= await generate_tokens(newuser);
-    res.cookie(ACCESS_COOKIE,access_token,access_attributes);
-    res.cookie(REFRESH_COOKIE,refresh_token,refresh_attributes);//note exp time ofcookie si more thant exp time of token  to chanhe it use exp prop with customized expt time in payload fo jwt
+    res.cookie('ACCESS_COOKIE',access_token,access_attributes);
+    res.cookie('REFRESH_COOKIE',refresh_token,refresh_attributes);//note exp time ofcookie si more thant exp time of token  to chanhe it use exp prop with customized expt time in payload fo jwt
 
 };
 const Clearcookies=async(req,res)=>{
-    res.clearCookie(ACCESS_COOKIE,access_attributes);
-    res.clearCookie(REFRESH_COOKIE,refresh_attributes);
-    req
+    
+    res.clearCookie('ACCESS_COOKIE',access_attributes);
+    res.clearCookie('REFRESH_COOKIE',refresh_attributes);
+    const refresh_token=req.cookies.REFRESH_COOKIE;
+    if(!refresh_token){return;}
+    await session.deleteOne({refresh_token});
+    //no need to catch rethrow at caller with the help of await
+    
+
+    
 };
 module.exports={Authcookies,Clearcookies};

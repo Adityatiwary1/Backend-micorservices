@@ -1,4 +1,11 @@
-/api_gateway/node_modules
-/api_gateway/.env
 /user_service/node_modules
 /user_service/.env
+/api_gateway/Nginx/nginx.conf
+/api_gateway/Nginx/new.nginx.conf
+/api_gateway/custom
+/search-service/node_modules
+/search-service/.env
+/media-service/node_modules
+/media-service/.env
+/post-service/node_modules
+/post-service/.env
