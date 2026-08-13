@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-config
+data:
+    PORT : 3001
+    REDIS_URI : redis://redis-service:3006/0
+  

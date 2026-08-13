@@ -1,0 +1,37 @@
+apiVersion : apps/v1
+kind : Deployment
+metadata : 
+       name : rabbitmq-deployment
+       namespace : backendmicro 
+       labels: 
+           app: rabbitmq
+spec:
+   replicas : 2 
+   selector :
+        app : rabbitmq
+   template : 
+        metadata : 
+              label :
+                  app : rabbitmq
+                      
+        spec :
+           containers :
+                    -  name : rabbitmq-container
+                       image: rabbitmq:v1
+                       envFrom:
+                           - secretRef:
+                                   name: rabbitmq-external-secret
+                       volumeMounts:
+                            - name : claim-rabbitmq
+                              mountPath: /var/lib/rabbitmq  #mountpath always is absolute
+                            - name : config-volume-rabbitmq
+                              mountPath : /templates  #will create this path inside the conatienr no need to caree before hand in cas of volumes
+                              #subPath: rabbitmq.template.conf   #diff rom bind mount file chnages are not reflected in config volume
+           volumes:
+              - name : claim-rabbitmq
+                persistentVolumeClaim:
+                               claimName : rabbitmq-data-pvc
+                
+              - name : config-volume-rabbitmq
+                configMap :
+                        name: rabbitmq-config              

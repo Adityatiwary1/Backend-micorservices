@@ -1,0 +1,20 @@
+apiVersion : apps/v1
+kind : Deployment
+metadata : 
+       name : post-deployment
+       namespace : backendmicro 
+       labels: 
+           app: post
+spec:
+   replicas : 1 
+   selector :
+        app : post
+   template : 
+        metadata : 
+              label :
+                  app : post
+                      
+        spec :
+           containers :
+                    -  name : post-container
+                       image: post:v1

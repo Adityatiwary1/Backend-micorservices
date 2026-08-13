@@ -1,7 +1,8 @@
 local cookie = require "resty.cookie"
 local jwt = require "resty.jwt"
-local secret = os.getenv("JWT_SECRET")
 
+--get secret
+local secret = ngx.var.jwt_secret
 -- Read cookie
 local ck, err = cookie:new()
 if not ck then
