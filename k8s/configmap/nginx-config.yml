@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configmap
+data:
+  nginx.template.conf: | 
+            events{}
+
+            http{
+                server {
+                listen 80 ;
+                
+                client_max_body_size 50M ;
+                set $jwt_secret  ${JWT_SECRET} ;
+
+                location /api/v1/auth/ {
+
+                    
+                    proxy_pass http://user-service:3001/auth/;         
+                  
+                    proxy_pass_request_headers on;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    
+                  
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                }  
+                location /api/v1/post/ {
+
+                    
+                    
+                    access_by_lua_file /usr/local/openresty/lua/auth.lua
+            ;
+
+                    proxy_set_header X-User-ID $http_x_user_id;
+                    proxy_pass http://post-service:3002/post/;
+                    
+                    
+
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                  
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_set_header X-Forwarded-Host $host;
+
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                } 
+                location /api/v1/upload/ {
+
+                    
+                    
+                    access_by_lua_file /usr/local/openresty/lua/auth.lua
+            ;
+
+                    proxy_set_header X-User-ID $http_x_user_id;
+                    proxy_pass http://media-service:3003/upload/;
+                    
+                    
+
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                  
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_set_header X-Forwarded-Host $host;
+
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                } 
+                      }
+                } 

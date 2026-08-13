@@ -1,0 +1,23 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+
+metadata:
+  name: nginx-external-secret
+  namespace: backendmicro
+
+spec:
+
+  secretStoreRef:
+    name: cluster-secret-store
+    kind: ClusterSecretStore
+
+  target:
+    name: nginx-secret
+    creationPolicy: Owner
+
+  data:         
+   - secretKey: JWT_SECRET
+     remoteRef:
+      key: prod/backendmicro/nginx-service/
+      property: JWT_SECRET
+  

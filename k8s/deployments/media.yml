@@ -1,0 +1,20 @@
+apiVersion : apps/v1
+kind : Deployment
+metadata : 
+       name : media-deployment
+       namespace : backendmicro 
+       labels: 
+           app: media
+spec:
+   replicas : 1 
+   selector :
+        app : media
+   template : 
+        metadata : 
+              label :
+                  app : media
+                      
+        spec :
+           containers :
+                    -  name : media-container
+                       image: media:v1

@@ -1,0 +1,116 @@
+services:
+    userservice:
+         # image: userservice:v1
+          container_name: user-service
+          restart: unless-stopped
+          depends_on :
+                 -  redisservice
+          networks:
+                 - proj-network
+          build:
+            context: .
+            dockerfile: ./user_service/Dockerfile
+            
+          env_file:
+                 - ./user_service/.env
+    
+    nginxservice:
+          #image: openresty:v1
+          container_name: nginx-service
+          restart: unless-stopped
+          depends_on: 
+                - postservice
+                - userservice
+                - mediaservice
+          build:
+            context: .
+            dockerfile: ./api_gateway/Nginx/Dockerfile
+          networks:
+                 - proj-network
+       
+          ports:
+                 - "3000:80"
+          volumes :
+                 - ./api_gateway/Nginx/new.nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf   #bind mounts chnage sare refleceted
+    postservice:
+          #image: temp:v1
+          container_name: post-service
+          restart: unless-stopped
+          depends_on :
+              - rabbitmqservice
+              - redisservice       
+          build:
+            context: .
+            dockerfile: ./post-service/Dockerfile
+          env_file:
+                 - ./post-service/.env
+          networks:
+                 - proj-network
+    mediaservice:
+          #image: temp:v2
+          container_name: media-service
+          restart: unless-stopped
+          depends_on: 
+                   - rabbitmqservice
+          build:
+            context: .
+            dockerfile: ./media-service/Dockerfile
+          env_file:
+                 - ./media-service/.env
+          networks:
+                 - proj-network
+ 
+    rabbitmqservice:
+         container_name: rabbitmq-service
+         restart: unless-stopped
+         build:
+             context: .
+             dockerfile : ./Rabbitmq/Dockerfile
+         volumes:
+              - ./Rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+              - rabbitmq-data:/var/lib/rabbitmq
+         networks:
+              - proj-network
+         ports:
+              - "5000:15000"
+   
+    redisservice:
+         container_name: redis-service
+         restart: unless-stopped
+         build:
+             context: .
+             dockerfile : ./Cachelayer/Redis/Dockerfile
+         volumes:
+              - ./Cachelayer/Redis/redis.conf:/usr/local/etc/redis/redis.conf
+              - redis-data:/data
+         networks:
+              - proj-network
+    mcpclientservice:
+         container_name: mcp-client-service
+         restart: unless-stopped
+         build:
+             context: .
+             dockerfile : ./chat-agent/mcp-client/Dockerfile
+         networks:
+              - proj-network
+         env_file:
+                 - ./chat-agent/mcp-client/.env
+    mcpserverservice:
+         container_name: mcp-server-service
+         restart: unless-stopped
+         build:
+             context: .
+             dockerfile : ./chat-agent/mcp-server/Dockerfile
+         networks:
+              - proj-network
+         env_file:
+                 - ./chat-agent/mcp-server/.env
+         
+          
+networks:   
+  proj-network:
+          driver: bridge
+volumes:
+  redis-data:
+  rabbitmq-data:
+

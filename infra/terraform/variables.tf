@@ -1,0 +1,60 @@
+variable "region" {
+  type = string
+}
+variable "vpc_cidr" {
+  type = string
+}
+
+variable "public_subnet" {
+  type = list(string)
+}
+variable "private_subnet" {
+  type = list(string)
+}
+
+variable "cluster_name" {
+  type = string
+}
+
+variable "env" {
+  type = string
+}
+#eks
+variable "cluster_version" {}
+variable "endpoint_private_access" {}
+variable "endpoint_public_access" {}
+variable "authentication_mode" {}
+
+variable "ondemand_instance_types" {}
+variable "desired_capacity_on_demand" {}
+variable "min_capacity_on_demand" {}
+variable "max_capacity_on_demand" {}
+
+variable "addons" {
+  type = list(object({
+    name    = string
+    version = string
+  }))
+}
+variable "addon_ebs" {
+  type = object({
+    name    = string
+    version = string
+  })
+}
+variable "addon_cni" {
+  type = object({
+    name    = string
+    version = string
+  })
+}
+variable "aws_secret_region" {
+  type = string
+}
+variable "aws_account_id" { #the same account which runs cd configured in provider and creates and calls regions specific api through sdk
+ #used by pods sdk aws for eg secret manager or acecssing some resources of difi region in curr vpc through NAT but needs in permission policy of iam and thsi perimmsion is craeted by terrafrm with terraform role arn and var.region
+  type = string
+}
+variable "terraform_role_arn" {
+  type = string                  #iam account for terraform to inteact with aws
+}

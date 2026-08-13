@@ -1,0 +1,24 @@
+apiVersion : apps/v1
+kind : Deployment
+metadata : 
+       name : user-deployment
+       namespace : backendmicro 
+       labels: 
+           app: user
+spec:
+   replicas : 3
+   selector :
+        app : user
+   template : 
+        metadata : 
+              label :
+                  app : user                      
+        spec :
+           containers :
+                    -  name : user-container
+                       image: user:v1
+                       envFrom:
+                           - secretRef:
+                                   name: user-external-secret
+                           - configMapRef:
+                                   name: user-config

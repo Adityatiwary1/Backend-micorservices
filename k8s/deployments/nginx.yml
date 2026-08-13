@@ -1,0 +1,31 @@
+apiVersion : apps/v1
+kind : Deployment
+metadata : 
+       name : nginx-deployment
+       namespace : backendmicro 
+       labels: 
+           app: nginx
+spec:
+   replicas : 2 
+   selector :
+        app : nginx
+   template : 
+        metadata : 
+              label :
+                  app : nginx
+                           
+        spec :
+           containers :
+                    -  name : nginx-container
+                       image: nginx:v1
+                       envFrom:
+                           - secretRef:
+                                   name: nginx-external-secret
+                       volumeMounts:
+                            - name : config-volume-nginx
+                              mountPath : /templates
+                            # subPath: nginx.template.conf  
+           volumes:
+              - name : config-volume-nginx
+                configMap :
+                        name: nginx-configmap          

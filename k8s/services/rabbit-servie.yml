@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-service
+  namespace: backendmicro   #scope to find withinthe namespace cannot find outside it
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+     - port: 
+       targetPort: 
+  type: ClusterIP
