@@ -4,7 +4,8 @@ kind: ExternalSecret
 metadata:
   name: nginx-external-secret
   namespace: backendmicro
-
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
 
   secretStoreRef:

@@ -29,7 +29,7 @@ services:
                  - proj-network
        
           ports:
-                 - "3000:80"
+                 - "80:80"
           volumes :
                  - ./api_gateway/Nginx/new.nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf   #bind mounts chnage sare refleceted
     postservice:
@@ -73,7 +73,13 @@ services:
               - proj-network
          ports:
               - "5000:15000"
-   
+         healthcheck:
+               test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+               interval: 40s
+               timeout: 5s
+               retries: 2
+               start_period: 5s
+               
     redisservice:
          container_name: redis-service
          restart: unless-stopped
@@ -105,12 +111,74 @@ services:
               - proj-network
          env_file:
                  - ./chat-agent/mcp-server/.env
-         
+   
+    prometheus:
+          image: prom/prometheus
+          volumes:
+               - "./LocalMonitoring/prometheus.yml:/etc/prometheus/prometheus.yml"
+               - "prometheus_data:/prometheus"
+          ports:
+               - "9090:9090"
+          networks:
+              - proj-network
+    node-exporter:
+          image: prom/node-exporter
+          networks:
+               - proj-network
+          ports:
+               - 9100:9100
+    #alert-manager:
+         # image: prom/alertmanager
+         # volumes:
+         #      - "./alertmanager.yml:/alertmanager/alertmanager.yml"
+         # networks:
+             #  - proj-network
+         # ports:
+               #- 9093:9093
+    cadvisor:
+          container_name: cadvisor
+          image: gcr.io/cadvisor/cadvisor:latest
+          #network_mode: "host"
+          ports:
+               - "8080:8080"
+          volumes: 
+               - "/:/rootfs"
+               - "/var/run:/var/run"
+               - "/sys:/sys"
+               - "/var/lib/docker/:/var/lib/docker"
+               - "/dev/disk/:/dev/disk"
+          privileged: true
+          devices: 
+               - "/dev/kmsg"
+          networks:   
+               - proj-network
+     
+    grafana:
+          container_name: grafana
+          image: grafana/grafana:latest
+          #network_mode: "host"
+          ports:
+               - "3000:3000"
+          environment:
+               - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+               - DS_PROMETHEUS=prometheus
+          volumes: 
+               - "grafana-data:/var/lib/grafana"
+               - "./LocalMonitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml"
+               - "./LocalMonitoring/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json"
+               - "./LocalMonitoring/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
+          privileged: true
+          depends_on:
+               - prometheus
+          networks :
+               - proj-network
           
-networks:   
+networks:
+
   proj-network:
           driver: bridge
 volumes:
   redis-data:
   rabbitmq-data:
-
+  prometheus_data:
+  grafana-data:

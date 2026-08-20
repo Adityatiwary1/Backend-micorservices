@@ -1,59 +1,80 @@
 const amqp = require("amqplib");
 const logger =require('../Utilis/logger');
-class RabbitMQService {
-  constructor(uri) {
-    this.connection = null;
-    this.channel = null;
-    this.counter=0;
-    this.uri=uri;
-  }
+const Mediadelcloud=require("../models/cloudinarypublicid")
+let currentConsumerChannel=null;
+const rabbitmqConsumerConnect = async () => {
+  logger.info('set up of rabbitmq');
+  const connection = await amqp.connect(process.env.RABBITMQ_URI, {
+    recovery: {
+      maxRetries: 1,
+      initialDelay: 1000,
+      async setup(model) {
+        const channel = await model.createChannel();
 
-  async connect() {
-    this.connection = await amqp.connect(this.uri);
+        await channel.assertExchange("Postexchange", "topic", {
+          durable: true,
+        });
 
-    this.channel = await this.connection.createChannel();
-    
+        await channel.assertQueue("PostQueue", {
+          durable: true,
+        });
 
-   
+        await channel.bindQueue(
+          "PostQueue",
+          "Postexchange",
+          "post.delete"
+        );
 
-    console.log("RabbitMQ connected");
+        
+        currentConsumerChannel = channel;
+        
 
-    this.connection.on("close", async() => {
-      try{
-      console.log("RabbitMQ connection closed retrying");
-      await this.reconnect();
-      }
-      catch(err){
-        logger.error(err.message);
-      
-      }
-    });
+        logger.info("RabbitMQ consumer ready");
+      },
+    },
+  });
 
-    this.connection.on("error", (err) => {
-      console.error("RabbitMQ error", err.message);
-      
-    });
-  }
+  connection.on("disconnect", (err) => {
+    logger.error("RabbitMQ consumer disconnected", err);
 
-  async reconnect() {
-     this.channel = null;
-     this.connection = null;
+    currentConsumerChannel = null;
+    consumerTag = null;
+  });
 
-     while (this.counter < 10) {
-        try {
-         await this.connect();
-         this.counter = 0;
-         return;
-        } 
-        catch (err) {
-         this.counter++;
-         console.log(`Reconnect attempt failed ${this.counter}`);
-         }
-       }
+  connection.on("connect", () => {
+    logger.info("RabbitMQ consumer connected/reconnected");
+  });
+  logger.info('set up complete');
+  return connection;
+};
+const consume_events=async()=>{
+  if(currentConsumerChannel){
+    const result = await currentConsumerChannel.consume(
+              "PostQueue",
+              async (message) => {
+                if (!message) return;
 
-     throw new Error("Maximum reconnect attempts to rabbitmq reached");
-   }
-   async consumeevent()
+                try {
+                  const data = JSON.parse(message.content.toString());
+                  const entries = data.mediaIDs.map((mediaID) => ({
+                      publicid: mediaID
+                    }));
+  
+                   await Mediadelcloud.insertMany(entries, {
+                      ordered: true
+                    });//by this duplicate publicid will give be given to delete but none will be missed  an #improvement needed 
+                    //use unique event id from consumer if duplication op can cause app logic error
 
-}
-module.exports=new RabbitMQService();
+                   currentConsumerChannel.ack(message);
+                   logger.info('published and acknowledged');
+                } catch (err) {
+                  logger.error("Error processing RabbitMQ message", err);
+
+                  // Choose your desired failure strategy
+                  currentConsumerChannel.nack(message, false, true);
+                }
+              }
+            );
+          }
+          }
+module.exports={consume_events,rabbitmqConsumerConnect};
