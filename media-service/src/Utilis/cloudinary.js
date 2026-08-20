@@ -29,7 +29,7 @@ const upload_cloudinary_promisified=(file)=>{
 const delete_from_cloudinary=async(publicidcloudinary)=>{
   try{
     const res= await cloudinary.uploader.destroy(publicidcloudinary);
-    return res;
+    return res;//can return not found but that sbhould not cause problem in our app logic so no extra handling for this case
   }
   catch(err){
      logger.error('delete unsuccessfull');

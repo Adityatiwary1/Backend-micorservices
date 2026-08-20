@@ -7,6 +7,7 @@ const uploadmedia=async(req,res)=>{
         if(!req.file){
             logger.error('upload media missing');
             res.status(400).json({success:true,message:'upload media missing'});
+            return;
         }
         const{originalname,mimetype,buffer}=req.file;
         const userid= req.user.userid;
@@ -24,13 +25,31 @@ const uploadmedia=async(req,res)=>{
 
 }
 const deletemedia =async(req,res)=>{
-    try{
-           const post =await 
-           await delete_from_cloudinary();
+    try{   const session = await mongoose.startSession();
+           const mediaid=req.params.id;
+           await session.withTransaction(async () => {
+                   const media= await Media.findByIdAndDelete(mediaId,{ session } ); 
+
+                   if (!media) {
+                        return res.status(404).json({ message: "Media not found" });
+                        }
+                    
+                    const publicId = media.publicid;
+                    await Mediadelcloud.create({
+                                publicid: publicId
+                            },{ session } );
+                        }       )
+            res.status(201).json({//lazy deletion
+            success:true,message:'media deleted'
+        }) 
+          logger.info('media stored in delete db');
     }
     catch(err){
         logger.error('error deleting media',err.message);
         res.status(500).json({success:false,message:'cloudinary error'});
+    }
+    finally {
+        await session.endSession();  //in both cases try or catch i have to end this session
     }
 }
 module.exports={

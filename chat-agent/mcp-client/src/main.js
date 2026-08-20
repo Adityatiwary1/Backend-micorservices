@@ -37,7 +37,9 @@ const startServer = async (app) => {
         
  }
 };
-startServer(app);
+process.on("SIGINT", () => shutdown(app));
+process.on("SIGTERM", () => shutdown(app));
+
 async function shutdown(app,improperstartobj) {
   logger.info("Shutting down...");
   let server,mcpclient,redisclient;
@@ -74,6 +76,5 @@ async function shutdown(app,improperstartobj) {
     process.exit(1)
 }
     
+startServer(app);
 
-process.on("SIGINT", () => shutdown(app));
-process.on("SIGTERM", () => shutdown(app));

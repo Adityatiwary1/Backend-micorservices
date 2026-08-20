@@ -73,7 +73,13 @@ services:
               - proj-network
          ports:
               - "5000:15000"
-   
+         healthcheck:
+               test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+               interval: 40s
+               timeout: 5s
+               retries: 2
+               start_period: 5s
+               
     redisservice:
          container_name: redis-service
          restart: unless-stopped
