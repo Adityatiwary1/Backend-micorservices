@@ -12,12 +12,20 @@ const app=express();
 const router=require('./routes/authroutes');
 const errorhandler=require('./Middleware/errorhandlerexp')
 const cookieparser=require('cookie-parser');
+let isready=false;
 const connectDB = async () => {
     try {
         const connection = await mongoose.connect(
             process.env.MONGO_URI
         );
-
+         mongoose.connection.on("disconnected", (err) => {//whole connection pool is disconnected 
+                  logger.error( err);
+                  isready=false;
+                });
+         mongoose.connection.on("connected", () => {
+                  logger.info("MongoDB connected");
+                  isready = true;
+                });        
         logger.info(
             `MongoDB connected: ${connection.connection.host}`
         );
@@ -30,6 +38,20 @@ const connectDB = async () => {
         process.exit(1);
     }
 }
+/*
+import { createCluster } from 'redis';
+
+const cluster = createCluster({
+  rootNodes: [
+    {
+      url: process.env.REDIS_URI,
+    },
+  ],
+});
+
+cluster.on('error', console.error);
+
+await cluster.connect();*/
 const redisclient = createClient({
     url: process.env.REDIS_URI
 });
@@ -39,7 +61,7 @@ const startServer = async (app) => {
   await redisclient.connect();
   const ratelimiter=new RateLimiterRedis({storeClient: redisclient,keyPrefix:'userservice',points:4,duration:1, useRedisPackage: true})
  
-  app.use((req,res,next)=>{//why not await???
+  app.use((req,res,next)=>{
     ratelimiter.consume(req.ip).then(()=>next()).catch((err)=>{
         logger.error(`${req.ip}`);
         logger.error(err);
@@ -47,11 +69,24 @@ const startServer = async (app) => {
         res.status(429).json({success:false,message:err.message});
       })
    });
-   app.use((req,res,next)=>{
+  app.use((req,res,next)=>{
     logger.info(`Received ${req.method} / ${req.path}`);
     return next();
     });
-  app.listen(process.env.PORT, () => {
+  app.use('/auth',router);
+  app.use('/health',(req, res) => {//this is the last middleware in chain in case of /health
+     if(isready){
+        res.status(200).json({
+                status: "ready"
+            });
+          return;
+        }
+        res.status(500).json({
+                status: "failure"
+            });
+    });
+  app.use(errorhandler); 
+  app.listen(process.env.PORT,"0.0.0.0", () => {
     logger.info(`Server running on port ${process.env.PORT}`);
   });
 }
@@ -112,8 +147,7 @@ const limiter = rateLimit({
   app.use(limiter);
 */
 
-app.use('/auth',router);
-app.use(errorhandler);
+
 
 
 startServer(app);

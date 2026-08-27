@@ -19,31 +19,31 @@ spec:
   data:         
    - secretKey: JWT_SECRET
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: JWT_SECRET 
    - secretKey: 
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: 
    - secretKey: COOKIE_SECURE 
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: COOKIE_SECURE
    - secretKey: COOKIE_SITE
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: COOKIE_SITE
    - secretKey: COOKIE_HTTP
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: COOKIE_HTTP
    - secretKey: CORS_ALLOWED
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: CORS_ALLOWED
    - secretKey: MONGO_URI
      remoteRef:
-      key: prod/backendmicro/user-service/
+      key: prod/backendmicro/user-service
       property: MONGO_URI
 
 

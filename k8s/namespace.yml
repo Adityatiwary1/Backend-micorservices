@@ -3,6 +3,6 @@ kind : Namespace
 metadata : 
      name : backendmircro
      annotations : 
-          argocd.argoproj.io/sync-wave: "-1"  #for argocd to run this firts if in argocd i have not created the target namespace  #ordering by  rgocd before sending it to control plane
+          argocd.argoproj.io/sync-wave: "-2"  #for argocd to run this firts if in argocd i have not created the target namespace  #ordering by  rgocd before sending it to control plane
                                               #if not using argocd sending manifest directly in cd then annotation are ignored by control plane (API) 
-                                              #annoatation are metdata for (client witha s ervice account argocd client has its won annotations kuebcli helm cli ahev theor own annotations) to process before sending it to control plane
+                                              #annoatation are metdata for (kube client witha service account argocd client has its won annotations kuebcli helm cli have their own annotations) to process before sending it to control plane

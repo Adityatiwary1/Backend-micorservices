@@ -21,7 +21,7 @@ bastion_key_name      = "new-keypair" # create your own key pair
 
 cluster_version         = "1.36"
 endpoint_private_access = true
-endpoint_public_access  = false
+endpoint_public_access  = true
 authentication_mode     = "API_AND_CONFIG_MAP"
 
 ondemand_instance_types = ["t3a.medium"]

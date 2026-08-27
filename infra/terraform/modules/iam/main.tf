@@ -105,6 +105,32 @@ data "aws_iam_policy_document" "eks_oidc_assume_trust_policy_ebs" {
     }
   }
 }
+data "aws_iam_policy_document" "eks_oidc_assume_trust_policy_image_updater" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    effect  = "Allow"
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:argocd:imageupdater"]
+    }
+    condition {
+      test = "StringEquals"
+
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:aud"
+
+      values = [
+        "sts.amazonaws.com"
+      ]
+    }   
+
+    principals {
+      identifiers = [var.oidc_provider_arn]
+      type        = "Federated"
+    }
+  }
+}
 data "aws_iam_policy_document" "external_secrets_permissions" {
   statement {
     effect = "Allow"
@@ -115,10 +141,41 @@ data "aws_iam_policy_document" "external_secrets_permissions" {
     ]
 
     resources = [
-      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*"
+      "arn:aws:secretsmanager:${var.aws_secret_region}:${var.aws_account_id}:secret:*"
     ]
   }
 }
+data "aws_iam_policy_document" "ecr_permissions" {
+  statement {
+    sid    = "ECRAuthorization"
+    effect = "Allow"
+
+    actions = [
+      "ecr:GetAuthorizationToken"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ECRReadOnly"
+    effect = "Allow"
+
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:DescribeImages",
+      "ecr:DescribeRepositories",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:ListImages"
+    ]
+
+    resources = [
+      "arn:aws:ecr:${var.aws_ecrimage_region}:${var.aws_account_id}:repository/${var.reponame}/*"
+    ]
+  }
+}
+#for access to all repo in cas eof micro which starts with reponame/servicename in ecr a repo represent one image and its tags
 resource "aws_iam_role" "eks-nodegroup-role" {
  
   name  = "${local.cluster_name}-nodegroup-role-${random_integer.random_suffix.result}"
@@ -162,6 +219,12 @@ resource "aws_iam_role" "vps-cni-role" {
   # Trust policy
   assume_role_policy = data.aws_iam_policy_document.eks_oidc_assume_trust_policy_cni.json
 }
+resource "aws_iam_role" "ecr_role" {
+  name = "ecr_role"
+
+  # Trust policy
+  assume_role_policy = data.aws_iam_policy_document.eks_oidc_assume_trust_policy_image_updater.json
+}
 resource "aws_iam_role_policy_attachment" "eks-AmazonEBSCSIDriverPolicy" {
   
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -176,4 +239,9 @@ resource "aws_iam_role_policy" "external_secrets" {
   name   = "external-secrets-secretsmanager"
   role   = aws_iam_role.external_secrets.name
   policy = data.aws_iam_policy_document.external_secrets_permissions.json
+}
+resource "aws_iam_role_policy" "ecr_attachment" {
+  name   = "ecr"
+  role   = aws_iam_role.ecr_role.name
+  policy = data.aws_iam_policy_document.ecr_permissions.json
 }

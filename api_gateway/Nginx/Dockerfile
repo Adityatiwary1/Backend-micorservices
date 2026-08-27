@@ -11,7 +11,7 @@ RUN  /usr/local/openresty/luajit/bin/luarocks install lua-resty-jwt  && \
 
 
 COPY ./api_gateway/Nginx/auth.lua  /usr/local/openresty/lua/auth.lua
-#COPY start.sh /usr/local/bin/          copy in binfodler with exact anme folder contents survive
+#COPY start.sh /usr/local/bin/          copy in binfodler with exact name folder contents survive
 
 #RUN chmod +x /usr/local/bin/start.sh
 

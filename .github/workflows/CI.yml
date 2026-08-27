@@ -1,0 +1,138 @@
+
+
+name: Build and Push Microservices
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+
+    
+      - name: Get version
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
+
+          echo "Current version: $VERSION"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          PATCH=$((PATCH + 1))
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          echo "IMAGE_TAG=$NEW_VERSION" >> "$GITHUB_ENV"      
+
+          echo "New image version: $NEW_VERSION"
+#set env with GITHUB_ENV for next runs now an env $IMAGE_TAG
+#in this before commit manuanly decide major and minor tag git tag
+     
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_ECR_REGION }}
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_CI_ROLE_ARN }}
+
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+ 
+      - name: Build user-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/user-service:$IMAGE_TAG \
+            ./user_service
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/user-service:$IMAGE_TAG
+
+      #GitHub Actions takes the contents under run: | and creates a temporary script, so | for yml parser and shell receives a script 
+      - name: Build search-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/search-service:$IMAGE_TAG \
+            ./user-service
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/search-service:$IMAGE_TAG
+      #${{}} is for actions runner processing it is not substitution in yml
+      - name: Build media-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/media-service:$IMAGE_TAG \
+            ./media-service
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/media-service:$IMAGE_TAG
+      - name: Build post-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/post-service:$IMAGE_TAG \
+            ./user-service
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/post-service:$IMAGE_TAG
+      - name: Build mcpclient-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/mcpclient-service:$IMAGE_TAG \
+            ./chat-agent/mcp-client
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/mcpclient-service:$IMAGE_TAG
+      - name: Build mcpserver-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/mcpserver-service:$IMAGE_TAG \
+            ./chat-agent/mcp-server
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/mcpserver-service:$IMAGE_TAG
+
+      - name: Build rabbitmq-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/rabbitmq-service:$IMAGE_TAG \
+            ./Rabbitmq
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/rabbitmq-service:$IMAGE_TAG
+      - name: Build redis-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/redis-service:$IMAGE_TAG \
+            ./Cachelayer/Redis
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/redis-service:$IMAGE_TAG  
+             - name: Build rabbitmq-service
+      - name: Build Nginx-service
+        run: |
+          docker build \
+            -t ${{ secrets.ECR_REGISTRY }}/nginx-service:$IMAGE_TAG \
+            ./api_gateway/Nginx
+
+          docker push \
+            ${{ secrets.ECR_REGISTRY }}/nginx-service:$IMAGE_TAG  
+           
+       
+      - name: Create Git tag
+        run: |          
+          git tag "$IMAGE_TAG"
+          git push origin "$IMAGE_TAG"

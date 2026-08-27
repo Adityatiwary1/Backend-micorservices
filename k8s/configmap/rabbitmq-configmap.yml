@@ -2,6 +2,8 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: rabbitmq-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 data:
   rabbitmq.template.conf: | # multi line strings in kub yml|
            listeners.tcp.default = ${RABBITMQ_PORT}

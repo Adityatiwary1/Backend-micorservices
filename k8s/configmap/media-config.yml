@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: media-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+    PORT : 3003
+    

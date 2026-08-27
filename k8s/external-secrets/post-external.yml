@@ -1,0 +1,27 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+
+metadata:
+  name: post-external-secret
+  namespace: backendmicro
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+
+  secretStoreRef:
+    name: cluster-secret-store
+    kind: ClusterSecretStore
+
+  target:
+    name: post-secret
+    creationPolicy: Owner
+
+  data:         
+   - secretKey: RABBITMQ_URI
+     remoteRef:
+      key: prod/backendmicro/post-service
+      property: RABBITMQ_URI
+   - secretKey: MONGO_URI
+     remoteRef: 
+      key: prod/backendmicro/post-service
+      property: MONGO_URI
