@@ -5,8 +5,14 @@ metadata :
        namespace : backendmicro 
        labels: 
            app: user
-spec:
+spec: 
    replicas : 3
+   strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
    selector :
         app : user
    template : 
@@ -14,11 +20,26 @@ spec:
               label :
                   app : user                      
         spec :
+           #terminationGracePeriodSeconds: 60
            containers :
                     -  name : user-container
-                       image: user:v1
+                       image: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/user-service:1.0.0
                        envFrom:
                            - secretRef:
-                                   name: user-external-secret
+                                   name: user-secret
                            - configMapRef:
                                    name: user-config
+                       ports:
+                           - name: http
+                             containerPort: 3001
+
+                       readinessProbe:
+                           httpGet:
+                              path: /health
+                              port: http
+                              scheme: HTTP
+                           initialDelaySeconds: 5
+                           periodSeconds: 10
+                           timeoutSeconds: 2
+                           failureThreshold: 3
+                           successThreshold: 1

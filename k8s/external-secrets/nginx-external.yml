@@ -7,7 +7,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-
+   #ssm has stored them a s json
+   #name in secretkey envfrom willmake ths same name as env varibale
+   #property name can be diff from actual env value but do avoid confusion keep the same name
   secretStoreRef:
     name: cluster-secret-store
     kind: ClusterSecretStore
@@ -19,6 +21,6 @@ spec:
   data:         
    - secretKey: JWT_SECRET
      remoteRef:
-      key: prod/backendmicro/nginx-service/
+      key: prod/backendmicro/nginx-service #parameter name if secret collection
       property: JWT_SECRET
   

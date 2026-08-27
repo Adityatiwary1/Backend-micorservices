@@ -1,0 +1,39 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+
+metadata:
+  name: media-external-secret
+  namespace: backendmicro
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+
+  secretStoreRef:
+    name: cluster-secret-store
+    kind: ClusterSecretStore
+
+  target:
+    name: media-secret
+    creationPolicy: Owner
+
+  data:         
+   - secretKey: CLOUD_NAME
+     remoteRef:
+      key: prod/backendmicro/media-service
+      property: CLOUD_NAME
+   - secretKey: 
+     remoteRef:
+      key: prod/backendmicro/media-service
+      property:
+   - secretKey: 
+     remoteRef:
+      key: prod/backendmicro/media-service
+      property:
+   - secretKey: 
+     remoteRef:
+      key: prod/backendmicro/media-service
+      property:
+   - secretKey: 
+     remoteRef:
+      key: prod/backendmicro/media-service
+      property:

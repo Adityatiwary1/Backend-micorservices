@@ -2,7 +2,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: user-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 data:
     PORT : 3001
-    REDIS_URI : redis://redis-service:3006/0
-  
+    REDIS_URI : redis://redis-service:3006/0 # redis://redis-0.redis-headless-service:3006
+           

@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-init
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+
+      containers:
+        - name: redis-cluster-init
+          image: redis:7
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+
+              echo "Waiting for Redis nodes..."
+
+              until redis-cli -h redis-0.redis-headless-service -p 6379 ping; do
+                sleep 2
+              done
+
+              until redis-cli -h redis-1.redis-headless-service -p 6379 ping; do
+                sleep 2
+              done
+
+              echo "All Redis nodes are ready"
+
+              redis-cli --cluster create \
+                redis-0.redis-headless-service:3006 \
+                redis-1.redis-headless-service:3006 \
+                --cluster-replicas 1 \
+                --cluster-yes

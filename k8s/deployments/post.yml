@@ -6,15 +6,39 @@ metadata :
        labels: 
            app: post
 spec:
-   replicas : 1 
+   replicas : 3
    selector :
         app : post
+   strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
    template : 
         metadata : 
               label :
                   app : post
                       
         spec :
-           containers :
-                    -  name : post-container
-                       image: post:v1
+            -  name : post-container
+               image: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/post-service:1.0.0
+               envFrom:
+                   - secretRef:
+                           name: post-secret
+                   - configMapRef:
+                           name: post-config
+               ports:
+                   - name: http
+                     containerPort: 3002
+
+               readinessProbe:
+                     httpGet:
+                        path: /health
+                        port: http
+                        scheme: HTTP
+                     initialDelaySeconds: 5
+                     periodSeconds: 10
+                     timeoutSeconds: 2
+                     failureThreshold: 3
+                     successThreshold: 1
+          

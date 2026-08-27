@@ -14,3 +14,6 @@ output "cni_arn" {
 output "secrets_arn" {
   value =  aws_iam_role.external_secrets.arn 
 }
+output "ecr_arn" {
+  value = aws_iam_role.ecr_role.arn 
+}

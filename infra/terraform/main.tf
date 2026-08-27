@@ -21,10 +21,12 @@ terraform {
 }
 #added if you wato change confguration of invoked provider
 provider "aws" {
-  region = var.region
-  assume_role {
-    role_arn = var.terraform_role_arn
-  }
+
+
+  #assume_role {
+  # role_arn = var.terraform_role_arn #not needed in github oidc #no need to call assume role api with a valid principal i e iam user in thi case
+  #}
+  #provider is configured to get access key temp from env 
 }
 
 #. terrafrom init where terraform will run
@@ -47,15 +49,15 @@ module "sg" {
 module "iam" {
   source = "./modules/iam"
 
-  cluster_name      = "${var.env}-${var.cluster_name}"
-  aws_region        = var.aws_secret_region
-  aws_account_id    = var.aws_account_id
-  region            = var.region
-  vpc_id            = module.vpc.vpc_id
-  oidc_provider_url = module.eks.oidc_provider_url
-  oidc_provider_arn = module.eks.oidc_provider_arn
-
-  depends_on = [module.vpc]
+  cluster_name        = "${var.env}-${var.cluster_name}"
+  aws_secret_region   = var.aws_secret_region
+  aws_account_id      = var.aws_account_id
+  vpc_id              = module.vpc.vpc_id
+  oidc_provider_url   = module.eks.oidc_provider_url
+  oidc_provider_arn   = module.eks.oidc_provider_arn
+  aws_ecrimage_region = var.aws_ecrimage_region
+  reponame            = var.ecrrepo_name
+  depends_on          = [module.vpc]
 }
 module "eks" {
   source = "./modules/eks"
@@ -124,15 +126,21 @@ module "lb_controller_role" {
 }
 module "lb-controller" {
   source       = "./modules/awslb-controller"
-  region       = var.region
+  region       = var.aws_eksvpcsglb_region
   cluster_name = module.eks.cluster_name
   iam_role_arn = module.lb_controller_role.iam_role_arn
   vpc_id       = module.vpc.vpc_id
   depends_on   = [module.eks-addon] #all add osn must be insatlled first for pods
 }
 module "argocd" {
-  source     = "./modules/argocd"
-  depends_on = [module.lb-controller] # we want argocd to be asccessible as well but if not accessbile from outsode it just wates then dependency has no need
+  source              = "./modules/argocd"
+  depends_on          = [module.lb-controller] # we want argocd to be accessible as well but if not reachbale from outside it just wates then dependency has no need
+  aws_account_id      = var.aws_account_id
+  aws_ecrimage_region = var.aws_ecrimage_region
+  reponame            = var.ecrrepo_name
+  github_token        = var.github_token
+  github_username     = var.github_username
+  ecr_role_arn        = module.iam.ecr_arn
 }
 provider "helm" {
   kubernetes = {

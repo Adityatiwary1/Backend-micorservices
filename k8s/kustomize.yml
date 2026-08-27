@@ -1,0 +1,37 @@
+#this is not  a kubernets resource  not sent to  control plane it is for kustomize app+argocd
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - identity.yml
+  - media.yml
+  - nginx.yml
+  - post.yml
+  - rabbitmq.yml
+  - search.yml
+  - redis-statefullset.yml
+  - mcpclient.yml
+  - mcpserver.yml
+
+images:
+#note right account id,ecrregion/complete repo name
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/user-service
+    newTag: "1.0.0"
+
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/media-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/post-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/search-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/nginx-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/redis-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/rabbitmq-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/mcpclient-service
+    newTag: "1.0.0"
+  - name: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/mcpserver-service
+    newTag: "1.0.0"
+  #explicitly making 1.0.0 as str for yml parser  

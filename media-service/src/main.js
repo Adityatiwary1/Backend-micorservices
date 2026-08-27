@@ -10,6 +10,7 @@ const errorhandler=require('./Middleware/errohandlernext');
 const {consume_events,rabbitmqConsumerConnect}=require("./Utilis/rabbitmq");
 const {handlepostdelete}=require("./Utilis/postdelhelper")
 const app = express();
+let isready=false;
 const connectDB = async () => {
  
 
@@ -32,8 +33,13 @@ const connectDB = async () => {
                 });
         mongoose.connection.on("disconnected", (err) => {//whole connection pool is disconnected 
                   logger.error( err);
+                  isready=false;
                 });//mongoose driver does not give control over connection logic or no of attempts like redis
                 //driver + mongooose give event diconnected when a connection fails after a succesult connected event unlike redis which gives reconnecting event
+         mongoose.connection.on("connected", () => {
+                  logger.info("MongoDB connected");
+                  isready = true;
+                });        
         return connection;         
 }
 const establishconnection=async(app)=>{
@@ -60,6 +66,18 @@ const startServer = async (app) => {
       return next();
         });
     app.use('/upload',router);
+    app.use('/health',(req, res) => {
+      if(isready){//this is ready is set only by mongodb as it is criticla for app logic 
+        //rabbitmq disconnected can be handled as we are storing evnts in db persistent so app logic can function
+          res.status(200).json({
+                  status: "ready"
+              });
+              return;
+            }
+           res.status(500).json({
+                  status: "failure"
+              }); 
+        });
     app.use(errorhandler);
     app.locals.server=app.listen(process.env.PORT, "0.0.0.0", () => {
       logger.info(`Server running on port ${process.env.PORT}`);
@@ -71,7 +89,7 @@ const startServer = async (app) => {
         } catch (error) {
             logger.error('consume rabbitmq event error', error.message);
         }
-    }, 10000);
+    }, 20000);
     setInterval(async () => {
         try {
             logger.info('running mediaid deletion')
@@ -79,7 +97,7 @@ const startServer = async (app) => {
         } catch (error) {
             logger.error('lazy deletion error', error.message);
         }
-    }, 5000);
+    }, 15000);
     
   }
  catch(err){
@@ -87,10 +105,10 @@ const startServer = async (app) => {
             `Server error: ${err.message}`
         );
     
-    shutdown(app);
+    shutdown(app,1);
  }
 };
-async function shutdown(app) {
+async function shutdown(app,exitcode=1) {
   logger.info("Shutting down...");
    if (app.locals.server?.listening) {
     try{
@@ -128,11 +146,11 @@ async function shutdown(app) {
       }
 
     }  
-    process.exit(1)
+    process.exit(exitcode)
 }
 
-process.on("SIGINT", () => shutdown(app));
-process.on("SIGTERM", () => shutdown(app));
+process.on("SIGINT", () => shutdown(app,0));
+process.on("SIGTERM", () => shutdown(app,0));
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error(reason);  
@@ -141,7 +159,7 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("uncaughtException", (err,origin) => {
   logger.error("Uncaught Exception:", err);
   
-   shutdown(app)
+   shutdown(app,1)
  
 });
 startServer(app);

@@ -1,6 +1,4 @@
-variable "region" {
-  type = string
-}
+
 variable "vpc_cidr" {
   type = string
 }
@@ -51,10 +49,24 @@ variable "addon_cni" {
 variable "aws_secret_region" {
   type = string
 }
-variable "aws_account_id" { #the same account which runs cd configured in provider and creates and calls regions specific api through sdk
- #used by pods sdk aws for eg secret manager or acecssing some resources of difi region in curr vpc through NAT but needs in permission policy of iam and thsi perimmsion is craeted by terrafrm with terraform role arn and var.region
+variable "aws_account_id" { #used in permsison policy of i am role resource arn of account being sued by terraform provider
   type = string
 }
 variable "terraform_role_arn" {
-  type = string                  #iam account for terraform to inteact with aws
+  type = string #iam account for terraform to interact with aws
+}
+variable "aws_ecrimage_region" {
+  type = string
+}
+variable "ecrrepo_name" {
+  type = string
+}
+variable "aws_eksvpcsglb_region" {
+  type = string
+}
+variable "github_token" {
+  type = string
+}
+variable "github_username" {
+  type = string
 }

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-service
+  namespace: backendmicro   
+spec:
+  selector:
+    app: media
+  ports:
+     - port: 3003
+       targetPort: 3003
+  type: ClusterIP

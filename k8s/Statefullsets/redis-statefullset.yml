@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:v1
+          image: <accountid>.dkr.ecr.<ecr_region>.amazonaws.com/<reponame>/redis-service:1.0.0
           
           envFrom:
             - secretRef : 

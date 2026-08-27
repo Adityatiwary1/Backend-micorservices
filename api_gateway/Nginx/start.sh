@@ -1,5 +1,5 @@
 set -e
 
-envsubst < /templates/rabbitmq.template.conf > /etc/rabbitmq/rabbitmq.conf
+envsubst < /templates/nginx.template.conf > /usr/local/openresty/nginx/conf/nginx.conf
 
 exec openresty -g "daemon off;"
